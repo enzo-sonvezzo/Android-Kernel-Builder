@@ -124,7 +124,6 @@ jobs:
           args: ${{ steps.generate-args.outputs.args }}
         run: |
           make ${{ env.args }} ${{ env.DEFCONFIG_NAME }}
-          *Verification:* Successful generation of out/.config file.
 
       - name: "🎶 Build kernel"
         working-directory: ./${{ env.kernelDir }}/${{ env.kernelName }}
