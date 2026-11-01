@@ -49,8 +49,7 @@ jobs:
       - name: "⭐ Install prerequisites"
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential bc curl git zip gcc-aarch64-linux-gnu libssl-dev zstd wget libfl-dev python3 libarchive-tools jq
-
+          sudo apt-get install -y build-essential bc curl git zip gcc-aarch64-linux-gnu libssl-dev zstd wget libfl-dev python3 libarchive-tools jq bison flex pahole rsync
       - name: "🌟 Clone kernel source => (${{ env.kernelRepo }})"
         working-directory: ./${{ env.kernelDir }}
         run: |
@@ -76,28 +75,20 @@ jobs:
         env:
           params: "${{ toJSON(matrix.repos.params) }}"
         run: |
-          ARCH=$(echo $params | jq -r ".ARCH")
-          CROSS_COMPILE=$(echo $params | jq -r ".CROSS_COMPILE")
-          CLANG_TRIPLE=$(echo $params | jq -r ".CLANG_TRIPLE")
-          CC=$(echo $params | jq -r ".CC")
-          LLVM=$(echo $params | jq -r ".LLVM // empty")
-          LLVM_IAS=$(echo $params | jq -r ".LLVM_IAS // empty")
+           ARCH=$(echo $params | jq -r ".ARCH")
+           CROSS_COMPILE=$(echo $params | jq -r ".CROSS_COMPILE")
+           CLANG_TRIPLE=$(echo $params | jq -r ".CLANG_TRIPLE")
 
-          echo "ARCH=$ARCH" >> $GITHUB_ENV
+           echo "ARCH=$ARCH" >> $GITHUB_ENV
 
-          args="-j$(nproc --all)"
-          if [ -n "${{ env.OUT_DIR }}" ]; then
-            mkdir -p $(pwd)/${{ env.OUT_DIR }}
-            args="$args O=$(pwd)/${{ env.OUT_DIR }}"
-          fi
-          if [ -n "$ARCH" ]; then args="$args ARCH=$ARCH"; fi
-          if [ -n "$CROSS_COMPILE" ]; then args="$args CROSS_COMPILE=$CROSS_COMPILE"; fi
-          if [ -n "$CLANG_TRIPLE" ]; then args="$args CLANG_TRIPLE=$CLANG_TRIPLE"; fi
-          if [ -n "$CC" ]; then args="$args CC=$CC"; fi
-          if [ -n "$LLVM" ]; then args="$args LLVM=$LLVM"; fi
-          if [ -n "$LLVM_IAS" ]; then args="$args LLVM_IAS=$LLVM_IAS"; fi
+           args="-j$(nproc --all)"
+           if [ -n "${{ env.OUT_DIR }}" ]; then
+             mkdir -p $(pwd)/${{ env.OUT_DIR }}
+             args="$args O=$(pwd)/${{ env.OUT_DIR }}"
+           fi
+           args="$args ARCH=$ARCH CROSS_COMPILE=$CROSS_COMPILE CLANG_TRIPLE=$CLANG_TRIPLE CC=clang LLVM=1 LLVM_IAS=1 HOSTCC=clang HOSTCXX=clang++"
 
-          echo "args=$args" >> $GITHUB_OUTPUT
+           echo "args=$args" >> $GITHUB_OUTPUT
 
       - name: "😋 Update KernelSU & Inject Container Configs"
         working-directory: ./${{ env.kernelDir }}/${{ env.kernelName }}
